@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monochrome Constructor</title>
+<style>
+:root{--bg:#0e1116;--panel:#171c24;--line:#262d38;--txt:#e6e9ee;--dim:#8b93a1;--acc:#5aa9ff;--sel:#3ddc84}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 -apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:baseline}
+header h1{font-size:16px;margin:0}
+header span{color:var(--dim)}
+main{display:grid;grid-template-columns:520px 1fr;gap:16px;padding:16px 20px;align-items:start}
+table{width:100%;border-collapse:collapse}
+th,td{padding:6px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-size:13px}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--dim);font-weight:600;font-size:12px}
+tr.row{cursor:pointer}
+tr.row:hover{background:#1c232d}
+tr.active{background:#1e2836}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 16px}
+.chip{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:#131820;cursor:pointer;transition:border-color .12s}
+.chip:hover{border-color:var(--acc)}
+.chip.sel{border-color:var(--sel);box-shadow:0 0 0 1px var(--sel)}
+.mimg{width:32px;height:32px;border-radius:6px;object-fit:cover;flex:none;background:#0b0e13}
+.mimg.contain{object-fit:contain}
+.meta{color:var(--dim);font-size:12px}
+.pal{display:flex;gap:3px;margin-top:4px;align-items:center}
+.psw{width:13px;height:13px;border-radius:3px;border:1px solid #0006;display:inline-block}
+.psw.rainbow{background:conic-gradient(#f55,#fc0,#4c4,#4cf,#44f,#c4c,#f55)}
+.psw.common{opacity:.35;border-style:dashed}
+.rpct{font-size:10px;color:var(--dim);margin-left:2px}
+h3{margin:10px 0 6px;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+#status{color:var(--dim);padding:8px 0}
+.score{width:44px;text-align:right;display:inline-block;margin-right:6px;font-variant-numeric:tabular-nums;flex:none}
+.pair{margin:4px 0;cursor:pointer;padding:4px 6px;border-radius:8px;display:flex;align-items:center}
+.pair:hover{background:#1c232d}
+.pair.sel{background:#1e2836;outline:1px solid var(--sel)}
+.tile{display:inline-flex;width:36px;height:36px;border-radius:7px;vertical-align:middle;margin-right:9px;overflow:hidden;flex:none;background:#11141a center/cover no-repeat;border:1px solid #0006}
+.tile img{width:100%;height:100%;object-fit:contain}
+h2{margin:0 0 4px;font-size:15px}
+td.sales{font-weight:700}
+.right{position:sticky;top:16px}
+#canvas{position:relative;width:min(66vh,100%);aspect-ratio:1;margin:6px auto 0;border-radius:14px;overflow:hidden;background:#11141a center/cover no-repeat;display:flex;align-items:center;justify-content:center;border:1px solid var(--line)}
+#canvas img{width:80%;height:80%;object-fit:contain;filter:drop-shadow(0 10px 24px #0008)}
+#canvas .placeholder{color:var(--dim);padding:20px;text-align:center}
+.cinfo{margin:12px auto 0;width:min(66vh,100%)}
+.cinfo .row1{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.cinfo .names{font-size:15px}
+.cinfo .scorebig{font-size:20px;font-variant-numeric:tabular-nums;color:var(--sel)}
+.cinfo .palrow{margin-top:6px}
+</style>
+</head>
+<body>
+<header><h1>Monochrome Constructor</h1><span>скор v2.28 · детерминированный mono 80 + цвет BCP-32 20 · чистые целочисленные веса</span><a href="/top" style="color:#fff;text-decoration:none;border:1px solid #3b3f4b;border-radius:999px;padding:7px 12px;font-weight:800">Топ ↗</a></header>
+<main>
+  <div>
+    <div class="panel">
+      <h3>Топ-10 коллекций · продажи 24ч</h3>
+      <table id="top"><thead><tr><th>Коллекция</th><th>Продаж 24ч</th><th>Объём 24ч</th><th>Флор</th><th>В продаже</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="panel" id="ctor" style="margin-top:16px;display:none"></div>
+  </div>
+  <div class="panel right">
+    <div id="canvas"><div class="placeholder">Выбери коллекцию слева,<br>потом фон и модель</div></div>
+    <div class="cinfo" id="cinfo"></div>
+  </div>
+</main>
+<script>
+const fmt = n => n == null ? "—" : Number(n).toLocaleString("ru-RU", {maximumFractionDigits: 1});
+async function j(u){ const r = await fetch(u); if (!r.ok) throw new Error(await r.text()); return r.json(); }
+let DATA = null, SEL = {m: null, b: null};
+
+function bgUrl(name){ return "/api/render/backdrop/" + DATA.collection.short_name + "/" + encodeURIComponent(name); }
+
+function palHtml(x){
+  let h = "";
+  const pal = x.palette || [];
+  for (const c of pal.slice(0, 3))
+    h += `<span class="psw${c.common ? " common" : ""}" style="background:${c.hex}" title="${Math.round((c.share_all || c.share || 0) * 100)}%${c.common ? " · общий цвет коллекции (в скоре невидим)" : ""}"></span>`;
+  if ((x.rainbow || 0) >= 0.35)
+    h += `<span class="psw rainbow" title="радужность"></span><span class="rpct">${Math.round(x.rainbow * 100)}%</span>`;
+  return h ? `<div class="pal">${h}</div>` : "";
+}
+
+function drawCanvas(){
+  const cv = document.getElementById("canvas");
+  const info = document.getElementById("cinfo");
+  if (!DATA){ return; }
+  const b = DATA.backdrops[SEL.b], m = DATA.models[SEL.m];
+  if (!b && !m){
+    cv.style.backgroundImage = "none";
+    cv.innerHTML = `<div class="placeholder">Выбери фон и модель</div>`;
+    info.innerHTML = "";
+    return;
+  }
+  cv.style.backgroundImage = b ? `url('${bgUrl(b.name)}')` : "none";
+  cv.innerHTML = m && m.img ? `<img src="${m.img}">` : (m ? `<div class="placeholder">нет PNG модели</div>` : "");
+  const pair = (m && b) ? DATA.monochrome_pairs.find(p => p.model === m.name && p.backdrop === b.name) : null;
+  const prefTitle = pair ? `итог: ${pair.score} · детерминированный mono: ${pair.mono_score} (${pair.mono_points} баллов) · spatial v2: ${pair.legacy_mono_score ?? "—"} · цвет BCP: ${pair.color_score} (${pair.color_points} баллов) · visual base: ${pair.base_score} · BCP: ${pair.bcp_hue || "—"}/${pair.bcp_cut || "—"} (${pair.bcp_rating ?? "—"})` : "";
+  info.innerHTML = `<div class="row1"><span class="names"><b>${m ? m.name : "—"}</b> × ${b ? b.name : "—"}</span>` +
+    (pair ? `<span class="scorebig" title="${prefTitle}">${pair.score}</span>` : `<span class="meta">нет скора</span>`) + `</div>` +
+    (pair ? `<div class="meta">детерминированный mono ${pair.mono_score} → ${pair.mono_points} · spatial ${pair.spatial_mono_score ?? "—"} · legacy ${pair.legacy_mono_score ?? "—"} · цвет BCP ${pair.color_score} → ${pair.color_points} баллов · visual base ${pair.base_score} · ${pair.color_family || "—"}</div>` : "") +
+    (m ? `<div class="palrow">${palHtml(m)}</div>` : "");
+}
+
+function selectBackdrop(i){ SEL.b = (SEL.b === i ? null : i); refreshSel(); }
+function selectModel(i){ SEL.m = (SEL.m === i ? null : i); refreshSel(); }
+function selectPair(i){
+  const p = DATA.monochrome_pairs[i];
+  SEL.m = DATA.models.findIndex(m => m.name === p.model);
+  SEL.b = DATA.backdrops.findIndex(b => b.name === p.backdrop);
+  refreshSel();
+}
+function refreshSel(){
+  document.querySelectorAll(".chip.b").forEach((el, i) => el.classList.toggle("sel", i === SEL.b));
+  document.querySelectorAll(".chip.m").forEach((el, i) => el.classList.toggle("sel", i === SEL.m));
+  document.querySelectorAll(".pair").forEach((el) => {
+    const p = DATA.monochrome_pairs[el.dataset.idx];
+    el.classList.toggle("sel", SEL.m >= 0 && SEL.b >= 0 && DATA.models[SEL.m]?.name === p.model && DATA.backdrops[SEL.b]?.name === p.backdrop);
+  });
+  drawCanvas();
+}
+
+async function loadTop(){
+  const d = await j("/api/top");
+  const tb = document.querySelector("#top tbody");
+  tb.innerHTML = "";
+  for (const c of d.top){
+    const tr = document.createElement("tr");
+    tr.className = "row";
+    tr.innerHTML = `<td>${c.name}</td><td class="sales">${fmt(c.sales_24h_count)}</td><td>${fmt(c.day_volume)} TON</td><td>${fmt(c.floor_price)}</td><td>${fmt(c.listed_count)}</td>`;
+    tr.onclick = () => {
+      document.querySelectorAll("tr.row").forEach(x => x.classList.remove("active"));
+      tr.classList.add("active");
+      loadConstructor(c.short_name);
+    };
+    tb.appendChild(tr);
+  }
+}
+
+function chipB(b, i){
+  const media = b.img ? `<img class="mimg" src="${b.img}" loading="lazy" title="${b.name}">` : `<span class="mimg" style="background:${b.hex || "#333"}"></span>`;
+  return `<div class="chip b" onclick="selectBackdrop(${i})">${media}<div>${b.name}<div class="meta">${b.count} шт · от ${fmt(b.min_price)} TON</div></div></div>`;
+}
+function chipM(m, i){
+  const media = m.img ? `<img class="mimg contain" src="${m.img}" loading="lazy" title="${m.name}">` : `<span class="mimg" style="background:${m.hex || "#333"}"></span>`;
+  return `<div class="chip m" onclick="selectModel(${i})">${media}<div>${m.name}<div class="meta">${m.count} шт · от ${fmt(m.min_price)} TON</div>${palHtml(m)}</div></div>`;
+}
+
+function pickTop(pairs){
+  return pairs.slice(0, 25).map((p, i) => ({p, i}));
+}
+
+async function loadConstructor(short){
+  const el = document.getElementById("ctor");
+  el.style.display = "block";
+  el.innerHTML = `<div id="status">Загружаю…</div>`;
+  try {
+    const d = await j("/api/constructor/" + short);
+    DATA = d;
+    SEL = {m: null, b: null};
+    if (d.monochrome_pairs.length){ selectPair0(); }
+    const cc = (d.common_colors || []).map(c => `<span class="psw common" style="background:${c.hex}" title="${Math.round(c.ratio*100)}% моделей"></span>`).join("");
+    el.innerHTML = `<h2>${d.collection.name}</h2>
+      <div class="meta">продаж 24ч: ${fmt(d.collection.sales_24h_count)} · листингов: ${d.scanned_listings} · объём 24ч: ${fmt(d.collection.day_volume)} TON · флор: ${fmt(d.collection.floor_price)} TON${cc ? " · общие цвета: " + cc : ""}</div>
+      <h3>Фоны (${d.backdrops.length}) — чистые рендеры</h3><div class="chips">${d.backdrops.map(chipB).join("")}</div>
+      <h3>Модели (${d.models.length}) — палитра + радужность</h3><div class="chips">${d.models.map(chipM).join("")}</div>
+      <h3>Монохромные пары v2.28 (топ-25 из ${d.monochrome_pairs.length})</h3>` +
+      pickTop(d.monochrome_pairs).map(({p, i}) =>
+        `<div class="pair" data-idx="${i}" onclick="selectPair(${i})"><span class="score" title="итог ${p.score} · детерминированный mono ${p.mono_score} (${p.mono_points}) · spatial ${p.spatial_mono_score ?? "—"} · legacy ${p.legacy_mono_score ?? "—"} · BCP цвет ${p.color_score} (${p.color_points}) · visual base ${p.base_score}">${p.score}</span>` +
+        `<span class="tile" style="background-image:url('${bgUrl(p.backdrop)}')">${p.model_img ? `<img src="${p.model_img}" loading="lazy">` : ""}</span>` +
+        `<span><b>${p.model}</b> × ${p.backdrop}<div class="meta">от ${fmt(p.min_price)} TON · детерминированный mono ${p.mono_score} · spatial ${p.spatial_mono_score ?? "—"} · legacy ${p.legacy_mono_score ?? "—"} · цвет ${p.color_score} · ${p.color_family || "—"}${p.rainbow >= 0.35 ? ` · радуга ${Math.round(p.rainbow * 100)}%` : ""}</div></span></div>`
+      ).join("");
+    refreshSel();
+  } catch (e) {
+    el.innerHTML = `<div id="status">Ошибка: ${e.message}</div>`;
+  }
+}
+
+function selectPair0(){
+  const p = DATA.monochrome_pairs[0];
+  SEL.m = DATA.models.findIndex(m => m.name === p.model);
+  SEL.b = DATA.backdrops.findIndex(b => b.name === p.backdrop);
+}
+
+loadTop().catch(e => { document.querySelector("#top tbody").innerHTML = `<tr><td>${e.message}</td></tr>`; });
+</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mono Top</title>
+<style>
+:root{color-scheme:dark;--bg:#0c0d10;--panel:#15171c;--panel2:#1b1e24;--line:#292d36;--text:#f5f6f8;--muted:#9097a5;--accent:#8dff7a;--gold:#ffd45d}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{padding-bottom:40px}
+.top{position:sticky;top:0;z-index:20;background:rgba(12,13,16,.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.head{height:58px;padding:0 14px;display:flex;align-items:center;gap:12px}.brand{font-size:18px;font-weight:950;letter-spacing:-.03em;white-space:nowrap}.brand b{color:var(--accent)}.head .meta{font-size:12px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nav{margin-left:auto;display:flex;gap:7px}.nav a{color:#d9dde5;text-decoration:none;border:1px solid var(--line);background:var(--panel);padding:7px 10px;border-radius:9px;font-size:12px;font-weight:800}
+.controls{display:grid;grid-template-columns:minmax(120px,1.2fr) minmax(110px,1fr) minmax(92px,.75fr) minmax(140px,1.4fr);gap:8px;padding:9px 14px 12px;max-width:1500px;margin:auto}select,input{width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:0 10px;font:700 13px inherit;outline:none}select:focus,input:focus{border-color:#596171}input::placeholder{color:#6f7683}
+.wrap{max-width:1500px;margin:auto;padding:10px 10px 0}.catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:9px}.card{position:relative;min-width:0;background:var(--panel);border:1px solid #222630;border-radius:13px;overflow:hidden;content-visibility:auto;contain-intrinsic-size:250px;transition:transform .13s,border-color .13s}.card:hover{transform:translateY(-2px);border-color:#454b58}.visual{position:relative;width:100%;aspect-ratio:1/1;background:#222;overflow:hidden}.visual img{position:absolute;inset:0;width:100%;height:100%}.visual .backdrop{object-fit:cover}.visual .gift{object-fit:contain;padding:2.5%;filter:drop-shadow(0 7px 9px rgba(0,0,0,.22))}.rank{position:absolute;left:7px;top:7px;z-index:3;padding:4px 6px;border-radius:7px;background:rgba(10,11,14,.78);font-size:10px;font-weight:850;color:#bac0cb;backdrop-filter:blur(8px)}.score{position:absolute;right:7px;top:7px;z-index:3;min-width:44px;padding:6px 7px;border-radius:9px;background:#edf1f5;color:#111318;text-align:center;font-size:15px;font-weight:950;letter-spacing:-.03em;box-shadow:0 3px 14px rgba(0,0,0,.25)}.card.elite .score{background:var(--accent)}.card.great .score{background:var(--gold)}.price{position:absolute;right:7px;bottom:7px;z-index:3;padding:5px 7px;border-radius:8px;background:rgba(8,9,12,.82);font-size:11px;font-weight:900;backdrop-filter:blur(8px)}
+.info{padding:9px 10px 10px}.collection{font-size:10px;font-weight:850;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.model{margin-top:3px;font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.backdrop-name{margin-top:2px;font-size:11px;color:#b5bbc6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.subscores{display:flex;gap:5px;margin-top:7px}.pill{padding:3px 5px;border-radius:6px;background:var(--panel2);color:#aeb5c1;font-size:9px;font-weight:800}.pill strong{color:#f3f5f8}
+.state{display:flex;justify-content:center;align-items:center;min-height:100px;color:var(--muted);font-size:13px;font-weight:750}.spinner{width:20px;height:20px;border:2px solid #323640;border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:9px}@keyframes spin{to{transform:rotate(360deg)}}
+.empty{grid-column:1/-1;padding:70px 20px;text-align:center;color:var(--muted)}
+@media(max-width:720px){.head{height:54px;padding:0 9px}.brand{font-size:16px}.head .meta{display:none}.nav a:not(:last-child){display:none}.controls{grid-template-columns:1fr 1fr;padding:8px 9px 10px}.wrap{padding:7px 6px}.catalog{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.card{border-radius:10px}.info{padding:8px}.score{font-size:14px}.model{font-size:12px}}
+@media(min-width:1200px){.catalog{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="head">
+    <div class="brand">MONO <b>TOP</b></div>
+    <div class="meta" id="meta">загружаю рейтинг…</div>
+    <div class="nav"><a href="/">Конструктор</a><a href="/swipe">Свайпы</a></div>
+  </div>
+  <div class="controls">
+    <select id="sort" aria-label="Сортировка">
+      <option value="score">Рейтинг ↓</option>
+      <option value="mono">Монохром ↓</option>
+      <option value="color">Цвет BCP ↓</option>
+      <option value="price">Цена ↑</option>
+    </select>
+    <select id="collection" aria-label="Коллекция"><option value="">Все коллекции</option></select>
+    <select id="minScore" aria-label="Минимальный рейтинг">
+      <option value="0">Любой скор</option><option value="65">65+</option><option value="75">75+</option><option value="85">85+</option><option value="90">90+</option>
+    </select>
+    <input id="query" type="search" autocomplete="off" placeholder="Модель или фон">
+  </div>
+</div>
+<main class="wrap">
+  <section class="catalog" id="catalog"></section>
+  <div class="state" id="state"><span class="spinner"></span>Собираю топ</div>
+  <div id="sentinel" aria-hidden="true"></div>
+</main>
+<script>
+const PAGE=80,$=id=>document.getElementById(id);let offset=0,total=0,loading=false,done=false,requestId=0,collectionsReady=false;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const num=v=>Number(v||0).toLocaleString("ru-RU",{maximumFractionDigits:2});
+function params(){const p=new URLSearchParams({offset:String(offset),limit:String(PAGE),sort:$("sort").value,min_score:$("minScore").value});if($("collection").value)p.set("collection",$("collection").value);if($("query").value.trim())p.set("q",$("query").value.trim());return p}
+function card(x){const cls=x.score>=85?"elite":x.score>=75?"great":"";const price=x.min_price==null?"":`<div class="price">◈ ${num(x.min_price)}</div>`;return `<article class="card ${cls}" data-key="${esc(x.item_key)}"><div class="visual" style="background:${esc(x.backdrop_hex||'#222')}"><img class="backdrop" loading="lazy" decoding="async" src="${esc(x.bg_url)}" alt=""><img class="gift" loading="lazy" decoding="async" src="${esc(x.model_img)}" alt="${esc(x.model)}"><div class="rank">#${num(x.rank)}</div><div class="score">${num(x.score)}</div>${price}</div><div class="info"><div class="collection">${esc(x.collection)}</div><div class="model" title="${esc(x.model)}">${esc(x.model)}</div><div class="backdrop-name" title="${esc(x.backdrop)}">× ${esc(x.backdrop)}</div><div class="subscores"><span class="pill">mono <strong>${num(x.mono_score)}</strong></span><span class="pill">color <strong>${num(x.color_score)}</strong></span></div></div></article>`}
+function fillCollections(rows){if(collectionsReady)return;for(const x of rows){const o=document.createElement("option");o.value=x.short;o.textContent=`${x.name} · ${x.count}`;$("collection").appendChild(o)}collectionsReady=true}
+async function load(){if(loading||done)return;loading=true;const id=++requestId;$("state").style.display="flex";try{const r=await fetch("/api/top-grid?"+params());if(!r.ok)throw new Error("HTTP "+r.status);const d=await r.json();if(id!==requestId)return;fillCollections(d.collections||[]);total=d.total;$("catalog").insertAdjacentHTML("beforeend",(d.items||[]).map(card).join(""));offset+=d.items.length;done=d.next_offset==null;$("meta").textContent=`${num(total)} пар · ${(d.collections||[]).length} коллекций · по рейтингу v2.28`;$("state").textContent=done?`Показаны все ${num(total)}`:"";$("state").style.display=done?"flex":"none"}catch(e){if(id===requestId){$("state").textContent="Ошибка загрузки: "+e.message;$("state").style.display="flex"}}finally{loading=false}}
+function reset(){requestId++;offset=0;total=0;done=false;loading=false;$("catalog").innerHTML="";$("state").innerHTML='<span class="spinner"></span>Обновляю рейтинг';load()}
+for(const id of ["sort","collection","minScore"])$(id).addEventListener("change",reset);let timer;$("query").addEventListener("input",()=>{clearTimeout(timer);timer=setTimeout(reset,250)});
+new IntersectionObserver(e=>{if(e[0].isIntersecting)load()},{rootMargin:"900px"}).observe($("sentinel"));load();
+</script>
+</body>
+</html>
